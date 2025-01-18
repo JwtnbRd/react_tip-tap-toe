@@ -1,11 +1,15 @@
 import { useState } from "react"
 import Board from "../molecules/Board"
-import useGameRegulation from "../../hooks/useGameRegulation"
+import { useGameRegulation } from "../../hooks/useGameRegulation"
 
 export default function Game() {
-  const [currentSquares, setCurrentSquares] = useState<(string | null)[]>(Array(9).fill(null))
-  const [historyArrays, setHistoryArrays] = useState<(string | null)[][]>([])
   const [isNextPlayerX, setIsNextPlayerX] = useState<boolean>(true)
+  // historyとcurrentSquaresは別で管理しようとしていたが、状態管理するのはhistoryのみで、currentSquaresはhistoryの末尾を取れば良い。
+  // const [historyArrays, setHistoryArrays] = useState<(string | null)[][]>([])
+  // const [currentSquares, setCurrentSquares] = useState<(string | null)[]>(Array(9).fill(null))
+  const [historyArrays, setHistoryArrays] = useState<(string | null)[][]>([Array(9).fill(null)])
+  const currentSquares = historyArrays[historyArrays.length - 1]
+
   const { getWinner } = useGameRegulation()
 
   const handleBoardClick = (i: number) => {
@@ -34,7 +38,9 @@ export default function Game() {
     //     ]
     //   )
     // })
-    setCurrentSquares(updatedSquares)
+
+    // ↓は呼ばなくてよくなる
+    // setCurrentSquares(updatedSquares)
     setIsNextPlayerX(!isNextPlayerX)
     setHistoryArrays((currentHistory) => {
       return (
@@ -46,13 +52,20 @@ export default function Game() {
     })
   }
 
+  // この実装だけでは配列の内容が元に戻るだけ。Playerの情報も戻さないと不整合が生じる。
   const handleHistoryClick = (i: number) => {
-    setCurrentSquares(historyArrays[i])
+    // setCurrentSquares(historyArrays[i])
+  }
+
+  const winner = getWinner(currentSquares)
+
+  const jumpTo = () => {
+
   }
 
   return (
     <>
-      <Board squares={currentSquares} isNextPlayerX={isNextPlayerX} handleBoardClick={handleBoardClick} />
+      <Board isNextPlayerX={isNextPlayerX} squares={currentSquares} handleBoardClick={handleBoardClick} winner={winner} />
       {historyArrays.map((_, i) => (
         <button key={i + 1} onClick={() => handleHistoryClick(i)}>Back to {i + 1}</button>
       ))}

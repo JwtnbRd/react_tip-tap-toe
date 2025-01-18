@@ -1,4 +1,4 @@
-const useGameRegulation = () => {
+export const useGameRegulation = () => {
   const getWinner = (squares: (string | null)[]) => {
     const linesForWin = [
       [0, 1, 2],
@@ -21,5 +21,3 @@ const useGameRegulation = () => {
 
   return { getWinner }
 }
-
-export default useGameRegulation

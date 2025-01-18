@@ -1,18 +1,17 @@
 import Square from "../atoms/Square";
-import useGameRegulation from "../../hooks/useGameRegulation";
 
 type BoardProps = {
   squares: (string | null)[];
   isNextPlayerX: boolean;
   handleBoardClick: (i: number) => void;
+  winner?: string | null;
 }
 
-export default function Board({ squares, isNextPlayerX, handleBoardClick }: BoardProps) {
-  const { getWinner } = useGameRegulation()
+export default function Board({ squares, isNextPlayerX, handleBoardClick, winner }: BoardProps) {
   // 当初、このwinnerの定義をhandleClick内で行なっていたので、
   // 勝者が決まった瞬間の次のクリックでしか勝者の表示ができなかった。
   // 即時評価なら地の文? useStateでwinnerを管理したくなるけどしないほうが良さそう。
-  const winner = getWinner(squares);
+  // const winner = getWinner(squares);
   let status;
   if (winner) {
     status = "Winner: " + winner;

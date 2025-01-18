@@ -1,4 +1,3 @@
-import { ReactNode, useState } from "react";
 
 type SquareProps = {
   value: string | null;
@@ -6,11 +5,5 @@ type SquareProps = {
 }
 
 export default function Square({ value, handleClick }: SquareProps) {
-  // const [value, setValue] = useState<string>("");
-
-  return (
-    <>
-      <button className="square" onClick={handleClick}>{value}</button>
-    </>
-  )
+  return <button className="square" onClick={handleClick}>{value}</button>;
 }
