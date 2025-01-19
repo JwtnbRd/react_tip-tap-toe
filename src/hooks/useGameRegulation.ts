@@ -1,5 +1,5 @@
 export const useGameRegulation = () => {
-  const getWinner = (squares: (string | null)[]) => {
+  const getGameResult = (squares: (string | null)[]) => {
     const linesForWin = [
       [0, 1, 2],
       [3, 4, 5],
@@ -16,8 +16,10 @@ export const useGameRegulation = () => {
       return squares[a] && squares[a] === squares[b] && squares[a] === squares[c]
     })
 
-    return completedLine ? squares[completedLine[0]] : null
+    const winner = completedLine ? squares[completedLine[0]] : null
+
+    return { winner: winner, completedLine: completedLine }
   }
 
-  return { getWinner }
+  return { getGameResult }
 }
