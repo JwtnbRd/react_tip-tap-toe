@@ -1,74 +1,66 @@
 import { useState } from "react"
 import Board from "../molecules/Board"
 import { useGameRegulation } from "../../hooks/useGameRegulation"
+import HistoryButtons from "../molecules/historyButtons"
+
+type ClickedPointType = {
+  row?: number;
+  col?: number;
+}
 
 export default function Game() {
-  const [isNextPlayerX, setIsNextPlayerX] = useState<boolean>(true)
-  // historyとcurrentSquaresは別で管理しようとしていたが、状態管理するのはhistoryのみで、currentSquaresはhistoryの末尾を取れば良い。
-  // const [historyArrays, setHistoryArrays] = useState<(string | null)[][]>([])
-  // const [currentSquares, setCurrentSquares] = useState<(string | null)[]>(Array(9).fill(null))
-  const [historyArrays, setHistoryArrays] = useState<(string | null)[][]>([Array(9).fill(null)])
-  const currentSquares = historyArrays[historyArrays.length - 1]
+  // const [isNextX, setIsNextX] = useState<boolean>(true)
+  const [histories, setHistories] = useState<(string | null)[][]>([Array(9).fill(null)])
+  const [pointHistories, setPointHistories] = useState<ClickedPointType[]>([{}])
+  const [currentMove, setCurrentMove] = useState<number>(0)
+  const currentSquares = histories[currentMove]
+  const isNextX = currentMove % 2 === 0
+  // 元々historyの最後の情報を取る仕様だった。どこで変わった？
+  // これだと固定的にhistoryの最後の情報に基づいたcurrentSquaresしか作れないので、NG
+  // const currentSquares = history[history.length - 1]
 
-  const { getWinner } = useGameRegulation()
+  const { getGameResult } = useGameRegulation()
+  const result = getGameResult(currentSquares);
 
-  const handleBoardClick = (i: number) => {
-    // getWinner関数は各クリックの時点でsquaresの状況がlinesForWinに該当するかを都度判断している。
-    // squaresの状況がlinesForWinの勝利パターンのいずれかに合致すれば勝利パターンのマスを埋めている文字列を返す。
-    // それ以外はnullを返す。つまり、getWinnerがnullを返さなくなった瞬間は勝利者が決まった瞬間である
-    if (currentSquares[i] || getWinner(currentSquares)) {
-      return
-    }
+  // ここも元々squaresを引数名としていたが、nextSquareに変わった。
+  // 意味は同じだが、意図するものが変わった？
+  // BoardのonPlayの引数として返ってくるのがこの引数。
+  // onPlayの引数は新しいマスがクリックされたときの成果物が渡されるため、最新の状況が入ってくる。
+  // それをhistoryの最後に加えている。
+  // const handlePlay = (squares: (string | null)[]) => {
+  const handlePlay = (nextSquares: (string | null)[], clickedIndex: number) => {
 
-    // クリックされた要素のインデックス番号はどうやって識別する？
-    // ここのコンポーネントでhandleClick={handleClick(i)}とするのはNGとまではわかっていたけど…
-    // .sliceが重要！sliceがなければ動作しない。
-    const updatedSquares = currentSquares.slice();
-    updatedSquares[i] = isNextPlayerX ? "X" : "O"
-
-    // 以下の方法でも書き換えは可能であるが、
-    // 後半の巻き戻し処理の実装のために操作前の配列に戻れるようにしておくため、
-    // コピーを用意しておく。
-    // またこの方法でやると初回クリック時の結果がブラウザに表示される際に遅延が発生する。
-    // setSquares((currentSquares) => {
-    //   return (
-    //     [
-    //       ...currentSquares,
-    //       currentSquares[i] = "X"
-    //     ]
-    //   )
-    // })
-
-    // ↓は呼ばなくてよくなる
-    // setCurrentSquares(updatedSquares)
-    setIsNextPlayerX(!isNextPlayerX)
-    setHistoryArrays((currentHistory) => {
-      return (
-        [
-          ...currentHistory,
-          currentSquares
-        ]
-      )
-    })
+    const currentPoint: ClickedPointType = {}
+    currentPoint.row = Math.floor(clickedIndex / 3) + 1
+    currentPoint.col = clickedIndex % 3 + 1
+    const nextHistory = [...histories.slice(0, currentMove + 1), nextSquares];
+    const nextClickedPoints = [...pointHistories.slice(0, currentMove + 1), currentPoint]
+    setHistories(nextHistory);
+    setPointHistories(nextClickedPoints)
+    setCurrentMove(nextHistory.length - 1)
+    // setIsNextX(!isNextX)
   }
 
-  // この実装だけでは配列の内容が元に戻るだけ。Playerの情報も戻さないと不整合が生じる。
-  const handleHistoryClick = (i: number) => {
-    // setCurrentSquares(historyArrays[i])
-  }
-
-  const winner = getWinner(currentSquares)
-
-  const jumpTo = () => {
-
+  const jumpTo = (i: number) => {
+    setCurrentMove(i)
+    // setIsNextX(i % 2 === 0)
   }
 
   return (
     <>
-      <Board isNextPlayerX={isNextPlayerX} squares={currentSquares} handleBoardClick={handleBoardClick} winner={winner} />
-      {historyArrays.map((_, i) => (
-        <button key={i + 1} onClick={() => handleHistoryClick(i)}>Back to {i + 1}</button>
-      ))}
+      <Board
+        isNextX={isNextX}
+        squares={currentSquares}
+        currentMove={currentMove}
+        onPlay={handlePlay}
+        gameResult={result}
+      />
+      <HistoryButtons
+        histories={histories}
+        pointHistories={pointHistories}
+        jumpTo={jumpTo}
+        currentMove={currentMove}
+      />
     </>
   )
 }
